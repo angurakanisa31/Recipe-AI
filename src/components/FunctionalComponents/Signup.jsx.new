@@ -1,0 +1,53 @@
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+const Signup = ({ onSignup }) => {
+  const [form, setForm] = useState({ firstName: '', lastName: '', email: '', password: '' });
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    const name = `${form.firstName} ${form.lastName}`;
+
+    try {
+      const res = await fetch('http://localhost:5000/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email: form.email, password: form.password }),
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        alert('Signup successful!');
+        onSignup();
+        navigate('/login');
+      } else {
+        alert(data.message || 'Signup failed');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error signing up');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="container">
+      <h2>Signup</h2>
+      <form onSubmit={handleSubmit}>
+        <input name="firstName" placeholder="First Name" value={form.firstName} onChange={handleChange} required />
+        <input name="lastName" placeholder="Last Name" value={form.lastName} onChange={handleChange} required />
+        <input name="email" type="email" placeholder="Email" value={form.email} onChange={handleChange} required />
+        <input name="password" type="password" placeholder="Password" value={form.password} onChange={handleChange} required />
+        <button type="submit" disabled={loading}>{loading ? 'Signing up...' : 'Signup'}</button>
+      </form>
+    </div>
+  );
+};
+
+export default Signup;
