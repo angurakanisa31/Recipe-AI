@@ -29,19 +29,19 @@ const RecipeGenerator = ({ setIsGenerated, setGroceryNeeded, addRecipe }) => {
     }
 
     try {
-      // Parse user ingredients
+      
       const userIngredients = ingredients
         .split(',')
         .map(i => i.trim().toLowerCase())
-        .filter(i => i); // Remove any empty strings
+        .filter(i => i); 
       
       console.log('Sending ingredients to server:', userIngredients);
       
-      // For demo purposes, we'll use a simulated response if the server is not available
+      
       let recipeData;
       
       try {
-        // Try to connect to the real server first
+        
         const response = await fetch('http://localhost:5000/api/recipes/generate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -88,8 +88,46 @@ const RecipeGenerator = ({ setIsGenerated, setGroceryNeeded, addRecipe }) => {
   const generateLocalRecipe = (userIngredients) => {
     console.log('Generating recipe locally with ingredients:', userIngredients);
     
-    // Predefined recipes database (simplified for demo)
-    const recipeDatabase = [
+    // Helper to normalize ingredient names (lowercase, trim, singularize)
+    const normalizeIngredient = (ing) => {
+      if (!ing) return '';
+      let s = ing.toLowerCase().trim();
+      if (s.endsWith('ies')) {
+        s = s.slice(0, -3) + 'y';
+      } else if (s.endsWith('es') && !s.endsWith('cheese')) {
+        s = s.slice(0, -2);
+      } else if (s.endsWith('s') && s.length > 3 && s !== 'pasta') {
+        s = s.slice(0, -1);
+      }
+      return s;
+    };
+
+    // Expanded local recipe database (15+ recipes)
+    const expandedRecipeDatabase = [
+      {
+        name: "Bread Omelet",
+        ingredients: ["bread", "eggs", "onions", "green chilies", "butter", "salt", "pepper"],
+        instructions: "Whisk eggs with chopped onions, green chilies, salt, and pepper. Pour into a hot buttered pan. Place bread slices on top, flip, and cook until done. Fold the omelet over the bread.",
+        requiredIngredients: ["bread", "eggs"]
+      },
+      {
+        name: "French Toast",
+        ingredients: ["bread", "eggs", "milk", "sugar", "butter", "cinnamon"],
+        instructions: "Whisk eggs, milk, sugar, and cinnamon in a bowl. Dip bread slices in the mixture. Cook on a hot buttered pan until golden brown on both sides.",
+        requiredIngredients: ["bread", "eggs", "milk"]
+      },
+      {
+        name: "Egg Sandwich",
+        ingredients: ["bread", "eggs", "butter", "mayonnaise", "salt", "pepper"],
+        instructions: "Boil or fry eggs. Butter bread slices, spread mayonnaise, and layer with eggs, salt, and pepper.",
+        requiredIngredients: ["bread", "eggs"]
+      },
+      {
+        name: "Cheese Sandwich",
+        ingredients: ["bread", "cheese", "butter"],
+        instructions: "Place cheese slices between buttered bread slices. Toast on a pan until bread is golden and cheese is melted.",
+        requiredIngredients: ["bread", "cheese"]
+      },
       {
         name: "Scrambled Eggs",
         ingredients: ["eggs", "butter", "salt", "pepper", "milk"],
@@ -103,10 +141,10 @@ const RecipeGenerator = ({ setIsGenerated, setGroceryNeeded, addRecipe }) => {
         requiredIngredients: ["pasta", "eggs"]
       },
       {
-        name: "Vegetable Stir Fry",
-        ingredients: ["bell peppers", "broccoli", "carrots", "soy sauce", "garlic", "ginger", "vegetable oil", "rice"],
-        instructions: "Chop vegetables. Heat oil and stir fry vegetables with garlic and ginger. Add soy sauce. Serve with rice.",
-        requiredIngredients: ["bell peppers", "broccoli", "carrots"]
+        name: "Tomato Pasta",
+        ingredients: ["pasta", "tomatoes", "garlic", "olive oil", "basil", "salt", "parmesan cheese"],
+        instructions: "Cook pasta. Sauté minced garlic in olive oil, add crushed tomatoes and cook down. Toss pasta with the sauce, salt, and basil. Top with parmesan.",
+        requiredIngredients: ["pasta", "tomatoes"]
       },
       {
         name: "Chicken Curry",
@@ -115,41 +153,122 @@ const RecipeGenerator = ({ setIsGenerated, setGroceryNeeded, addRecipe }) => {
         requiredIngredients: ["chicken", "curry powder"]
       },
       {
+        name: "Chicken Fried Rice",
+        ingredients: ["rice", "chicken", "eggs", "soy sauce", "garlic", "vegetable oil", "carrots", "peas"],
+        instructions: "Cook rice and let cool. Sauté garlic and diced chicken in oil. Add carrots and peas. Push to side, scramble eggs, then toss in rice and soy sauce.",
+        requiredIngredients: ["rice", "chicken"]
+      },
+      {
+        name: "Egg Fried Rice",
+        ingredients: ["rice", "eggs", "soy sauce", "garlic", "vegetable oil", "onions", "peas"],
+        instructions: "Cook rice and let cool. Sauté garlic and onions in oil. Scramble eggs in the pan, toss in the rice, peas, and soy sauce.",
+        requiredIngredients: ["rice", "eggs"]
+      },
+      {
+        name: "Vegetable Stir Fry",
+        ingredients: ["bell peppers", "broccoli", "carrots", "soy sauce", "garlic", "ginger", "vegetable oil", "rice"],
+        instructions: "Chop vegetables. Heat oil and stir fry vegetables with garlic and ginger. Add soy sauce. Serve with rice.",
+        requiredIngredients: ["bell peppers", "broccoli", "carrots"]
+      },
+      {
         name: "Fruit Smoothie",
         ingredients: ["banana", "strawberries", "yogurt", "honey", "ice"],
         instructions: "Blend all ingredients until smooth.",
         requiredIngredients: ["banana", "strawberries"]
+      },
+      {
+        name: "Banana Milkshake",
+        ingredients: ["banana", "milk", "sugar", "ice cream", "ice"],
+        instructions: "Blend banana, milk, sugar, and ice until smooth. Optionally top with a scoop of ice cream.",
+        requiredIngredients: ["banana", "milk"]
+      },
+      {
+        name: "Pancakes",
+        ingredients: ["flour", "milk", "eggs", "butter", "sugar", "baking powder", "maple syrup"],
+        instructions: "Whisk dry ingredients together. Whisk wet ingredients, combine, and pour batter onto a hot greased griddle. Flip when bubbles form and cook until golden. Serve with maple syrup.",
+        requiredIngredients: ["flour", "milk", "eggs"]
+      },
+      {
+        name: "French Fries",
+        ingredients: ["potatoes", "vegetable oil", "salt"],
+        instructions: "Cut potatoes into sticks. Soak in cold water, dry, and deep fry in hot oil until golden brown. Drain and toss with salt.",
+        requiredIngredients: ["potatoes"]
       }
     ];
+
+    const normalizedUserIngredients = userIngredients.map(ing => normalizeIngredient(ing));
     
-    // Find matching recipes
-    const matchingRecipes = recipeDatabase.filter(recipe => {
-      // Check if at least one required ingredient is available
-      return recipe.requiredIngredients.some(reqIng => 
-        userIngredients.some(userIng => userIng.includes(reqIng))
-      );
+    // Find matching recipes based on requiredIngredients (all must be met)
+    const matchingRecipes = expandedRecipeDatabase.filter(recipe => {
+      return recipe.requiredIngredients.every(reqIng => {
+        const normalizedReqIng = normalizeIngredient(reqIng);
+        return normalizedUserIngredients.some(userIng => 
+          userIng.includes(normalizedReqIng) || normalizedReqIng.includes(userIng)
+        );
+      });
     });
     
     if (matchingRecipes.length === 0) {
-      // If no match, return a default recipe
-      return {
-        name: "Simple Toast",
-        ingredients: ["bread", "butter"],
-        instructions: "Toast bread and spread butter on it.",
-        missingIngredients: ["bread", "butter"].filter(ing => 
-          !userIngredients.some(userIng => userIng.includes(ing))
-        ),
-        isAI: true
-      };
+      const hasBread = normalizedUserIngredients.some(ing => ing.includes('bread'));
+      if (hasBread) {
+        return {
+          name: "Simple Toast",
+          ingredients: ["bread", "butter"],
+          instructions: "Toast bread and spread butter on it.",
+          missingIngredients: ["butter"],
+          isAI: true
+        };
+      } else {
+        return {
+          name: "Scrambled Eggs",
+          ingredients: ["eggs", "butter", "salt", "pepper", "milk"],
+          instructions: "Beat eggs with milk, salt and pepper. Melt butter in pan and cook eggs until scrambled.",
+          missingIngredients: ["butter", "salt", "pepper", "milk"],
+          isAI: true
+        };
+      }
     }
     
-    // Select the best matching recipe (first one for simplicity)
-    const selectedRecipe = matchingRecipes[0];
+    // Score matching recipes
+    const scoredRecipes = matchingRecipes.map(recipe => {
+      let matchedCount = 0;
+      
+      recipe.ingredients.forEach(recipeIng => {
+        const normalizedRecipeIng = normalizeIngredient(recipeIng);
+        const isMatched = normalizedUserIngredients.some(userIng => 
+          userIng.includes(normalizedRecipeIng) || normalizedRecipeIng.includes(userIng)
+        );
+        if (isMatched) {
+          matchedCount++;
+        }
+      });
+      
+      let matchedRequiredCount = 0;
+      recipe.requiredIngredients.forEach(reqIng => {
+        const normalizedReqIng = normalizeIngredient(reqIng);
+        const isMatched = normalizedUserIngredients.some(userIng => 
+          userIng.includes(normalizedReqIng) || normalizedReqIng.includes(userIng)
+        );
+        if (isMatched) {
+          matchedRequiredCount++;
+        }
+      });
+      
+      const score = (matchedRequiredCount * 10) + matchedCount;
+      return { recipe, score };
+    });
+    
+    scoredRecipes.sort((a, b) => b.score - a.score);
+    const selectedRecipe = scoredRecipes[0].recipe;
     
     // Determine missing ingredients
-    const missingIngredients = selectedRecipe.ingredients.filter(ing => 
-      !userIngredients.some(userIng => userIng.includes(ing.toLowerCase()))
-    );
+    const missingIngredients = selectedRecipe.ingredients.filter(recipeIng => {
+      const normalizedRecipeIng = normalizeIngredient(recipeIng);
+      const isMatched = normalizedUserIngredients.some(userIng => 
+        userIng.includes(normalizedRecipeIng) || normalizedRecipeIng.includes(userIng)
+      );
+      return !isMatched;
+    });
     
     return {
       name: selectedRecipe.name,
